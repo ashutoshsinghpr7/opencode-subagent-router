@@ -96,6 +96,7 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
         typeof resultOutput === "string" ? resultOutput : JSON.stringify(resultOutput || "")
       const tokens = estimateTokens(outputText)
       stats.totalTokensRouted += tokens
+      stats.checks++
     },
 
     "session.idle": async () => {

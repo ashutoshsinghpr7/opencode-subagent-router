@@ -1,1 +1,1 @@
-export { SubagentRouter, default } from "./dist/index.js"
+export { SubagentRouter } from "./dist/index.js"

@@ -159,5 +159,3 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
     },
   }
 }
-
-export default SubagentRouter

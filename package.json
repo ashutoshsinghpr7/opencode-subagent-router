@@ -1,6 +1,6 @@
 {
   "name": "opencode-subagent-router",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Dynamic sub-agent model router for OpenCode - cost-optimized model selection with escalation and guardrails",
   "type": "module",
   "main": "./dist/index.js",

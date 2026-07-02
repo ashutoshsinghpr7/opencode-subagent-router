@@ -5,36 +5,20 @@ import { getRouteForAgent } from "./lib/router.js"
 
 let activeConfig: RouterConfig = DEFAULT_CONFIG
 
-const plugin: Plugin = async ({ client, directory }) => {
-  await client.app.log({
-    body: {
-      service: "opencode-subagent-router",
-      level: "info",
-      message: `Subagent Router loaded — cost-optimized routing active in ${directory}`,
-    },
-  })
-
-  await client.app.log({
-    body: {
-      service: "opencode-subagent-router",
-      level: "info",
-      message: `Rules: explore/title/summary/compaction → cheap | general/build/plan → flagship`,
-    },
-  })
+export const SubagentRouter: Plugin = async ({ client, directory }) => {
+  try {
+    await client.app.log({
+      body: {
+        service: "opencode-subagent-router",
+        level: "info",
+        message: `Subagent Router loaded — cost-optimized routing active in ${directory}`,
+      },
+    })
+  } catch {
+    // log API may not be available in all contexts
+  }
 
   return {
-    config: async (cfg) => {
-      const raw = cfg as unknown as Record<string, unknown>
-      const routerCfg = raw["model-router"] as Partial<RouterConfig> | undefined
-      if (routerCfg) {
-        if (routerCfg.rules) activeConfig.rules = routerCfg.rules
-        if (routerCfg.defaultModel) activeConfig.defaultModel = routerCfg.defaultModel
-        if (routerCfg.escalation) Object.assign(activeConfig.escalation, routerCfg.escalation)
-        if (routerCfg.guardrails) Object.assign(activeConfig.guardrails, routerCfg.guardrails)
-        if (routerCfg.providers) registerProviderCosts(routerCfg.providers)
-      }
-    },
-
     "chat.message": async (input, output) => {
       const agent = input.agent || "unknown"
 
@@ -74,13 +58,17 @@ const plugin: Plugin = async ({ client, directory }) => {
           const originalPrice = originalInfo.cost.input + originalInfo.cost.output
           const routedPrice = routedInfo.cost.input + routedInfo.cost.output
           if (originalPrice > routedPrice) {
-            await client.app.log({
-              body: {
-                service: "opencode-subagent-router",
-                level: "info",
-                message: `${subtaskAgent}: ${originalKey} → ${routedKey} (save ${formatCost(originalPrice - routedPrice)}/1M tokens)`,
-              },
-            })
+            try {
+              await client.app.log({
+                body: {
+                  service: "opencode-subagent-router",
+                  level: "info",
+                  message: `${subtaskAgent}: ${originalKey} → ${routedKey} (save ${formatCost(originalPrice - routedPrice)}/1M tokens)`,
+                },
+              })
+            } catch {
+              // ignore
+            }
           }
         }
 
@@ -122,13 +110,17 @@ const plugin: Plugin = async ({ client, directory }) => {
           .map(([agent, count]) => `${agent}: ${count}`)
           .join(", ")
 
-        await client.tui.showToast({
-          body: {
-            message: `Subagent Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
-            variant: "info",
-            duration: 8000,
-          },
-        })
+        try {
+          await client.tui.showToast({
+            body: {
+              message: `Subagent Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
+              variant: "info",
+              duration: 8000,
+            },
+          })
+        } catch {
+          // ignore
+        }
       }
       resetStats()
     },
@@ -152,16 +144,20 @@ const plugin: Plugin = async ({ client, directory }) => {
           ...rulings.slice(-10),
         ]
 
-        await client.tui.showToast({
-          body: {
-            message: lines.join("\n"),
-            variant: "info",
-            duration: 10000,
-          },
-        })
+        try {
+          await client.tui.showToast({
+            body: {
+              message: lines.join("\n"),
+              variant: "info",
+              duration: 10000,
+            },
+          })
+        } catch {
+          // ignore
+        }
       }
     },
   }
 }
 
-export default plugin
+export default SubagentRouter

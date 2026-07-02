@@ -27,6 +27,7 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
       for (const part of output.parts) {
         if (part.type !== "subtask") continue
 
+        stats.checks++
         const subtaskPart = part as {
           type: "subtask"
           agent: string

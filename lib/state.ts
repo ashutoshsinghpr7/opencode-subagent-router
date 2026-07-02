@@ -8,6 +8,7 @@ export interface RoutingDecision {
 }
 
 export interface RoutingStats {
+  checks: number
   decisions: RoutingDecision[]
   totalTokensRouted: number
   totalCostSaved: number
@@ -18,6 +19,7 @@ export interface RoutingStats {
 }
 
 export const stats: RoutingStats = {
+  checks: 0,
   decisions: [],
   totalTokensRouted: 0,
   totalCostSaved: 0,
@@ -28,7 +30,8 @@ export const stats: RoutingStats = {
 }
 
 export function resetStats(): void {
-  stats.decisions.length = 0
+  stats.checks = 0
+  stats.decisions = []
   stats.totalTokensRouted = 0
   stats.totalCostSaved = 0
   stats.sessionCostSaved = 0

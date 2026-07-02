@@ -2,7 +2,7 @@
 /** @jsxRuntime automatic */
 import { createSignal, onCleanup, onMount } from "solid-js"
 import { TextAttributes } from "@opentui/core"
-import { stats, formatCost } from "../state.js"
+import { formatCost, readStatsFromFile } from "../state.js"
 
 const POLL_INTERVAL_MS = 2000
 
@@ -18,12 +18,13 @@ export function RouterPanel() {
 
   onMount(() => {
     const sync = () => {
-      setChecks(stats.checks)
-      setDecisions(stats.decisions.length)
-      setSessionCostSaved(stats.sessionCostSaved)
-      setTotalCostSaved(stats.totalCostSaved)
-      setEscalations(stats.escalationCount)
-      setReverts(stats.guardrailReverts)
+      const s = readStatsFromFile()
+      setChecks(s.checks)
+      setDecisions(s.decisions.length)
+      setSessionCostSaved(s.sessionCostSaved)
+      setTotalCostSaved(s.totalCostSaved)
+      setEscalations(s.escalationCount)
+      setReverts(s.guardrailReverts)
     }
     sync()
     interval = setInterval(sync, POLL_INTERVAL_MS)

@@ -77,6 +77,10 @@ export function persistStats(): void {
   syncInMemoryToFile()
 }
 
+export function readStatsFromFile(): RoutingStats {
+  return readStats()
+}
+
 export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4)
 }

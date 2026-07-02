@@ -12,7 +12,7 @@ Dynamic sub-agent model router for [OpenCode](https://opencode.ai) — cost-opti
 | Google | Config-based | Manual | Add via `providers` config |
 | Others | Config-based | Manual | Add via `providers` config |
 
-> **Roadmap**: [#1](https://github.com/ace/opencode-subagent-router/issues/1) Add built-in cost data + default rules for OpenAI, Anthropic, Google. PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+> **Roadmap**: [#1](https://github.com/ashutoshsinghpr7/opencode-subagent-router/issues/1) Add built-in cost data + default rules for OpenAI, Anthropic, Google. PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Features
 

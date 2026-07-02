@@ -1,26 +1,40 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { DEFAULT_CONFIG, resolveModel, getModelCost } from "./lib/config.js"
+import { DEFAULT_CONFIG, resolveModel, getModelCost, registerProviderCosts, type RouterConfig } from "./lib/config.js"
 import { stats, resetStats, estimateTokens, formatCost } from "./lib/state.js"
 import { getRouteForAgent } from "./lib/router.js"
+
+let activeConfig: RouterConfig = DEFAULT_CONFIG
 
 const plugin: Plugin = async ({ client, directory }) => {
   await client.app.log({
     body: {
-      service: "opencode-model-router",
+      service: "opencode-subagent-router",
       level: "info",
-      message: `Model Router loaded — cost-optimized dynamic routing active in ${directory}`,
+      message: `Subagent Router loaded — cost-optimized routing active in ${directory}`,
     },
   })
 
   await client.app.log({
     body: {
-      service: "opencode-model-router",
+      service: "opencode-subagent-router",
       level: "info",
-      message: `Rules: explore/title/summary/compaction → v4-flash | general/build/plan → v4-pro`,
+      message: `Rules: explore/title/summary/compaction → cheap | general/build/plan → flagship`,
     },
   })
 
   return {
+    config: async (cfg) => {
+      const raw = cfg as unknown as Record<string, unknown>
+      const routerCfg = raw["model-router"] as Partial<RouterConfig> | undefined
+      if (routerCfg) {
+        if (routerCfg.rules) activeConfig.rules = routerCfg.rules
+        if (routerCfg.defaultModel) activeConfig.defaultModel = routerCfg.defaultModel
+        if (routerCfg.escalation) Object.assign(activeConfig.escalation, routerCfg.escalation)
+        if (routerCfg.guardrails) Object.assign(activeConfig.guardrails, routerCfg.guardrails)
+        if (routerCfg.providers) registerProviderCosts(routerCfg.providers)
+      }
+    },
+
     "chat.message": async (input, output) => {
       const agent = input.agent || "unknown"
 
@@ -35,7 +49,7 @@ const plugin: Plugin = async ({ client, directory }) => {
           model?: { providerID: string; modelID: string }
         }
         const subtaskAgent = subtaskPart.agent || agent
-        const route = getRouteForAgent(subtaskAgent)
+        const route = getRouteForAgent(subtaskAgent, activeConfig)
 
         const effectiveProvider =
           subtaskPart.model?.providerID || input.model?.providerID || "deepseek"
@@ -62,7 +76,7 @@ const plugin: Plugin = async ({ client, directory }) => {
           if (originalPrice > routedPrice) {
             await client.app.log({
               body: {
-                service: "opencode-model-router",
+                service: "opencode-subagent-router",
                 level: "info",
                 message: `${subtaskAgent}: ${originalKey} → ${routedKey} (save ${formatCost(originalPrice - routedPrice)}/1M tokens)`,
               },
@@ -110,7 +124,7 @@ const plugin: Plugin = async ({ client, directory }) => {
 
         await client.tui.showToast({
           body: {
-            message: `Model Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
+            message: `Subagent Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
             variant: "info",
             duration: 8000,
           },

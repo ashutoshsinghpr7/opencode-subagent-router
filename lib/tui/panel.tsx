@@ -37,7 +37,7 @@ export function RouterPanel() {
 
   return (
     <box
-      title="Model Router"
+      title="Subagent Router"
       borderStyle="single"
       flexDirection="column"
       paddingX={1}

@@ -4,7 +4,7 @@ import type { TuiPluginApi, TuiSlotContext } from "@opencode-ai/plugin/tui"
 import { RouterPanel } from "./lib/tui/panel.js"
 
 export default {
-  id: "opencode-model-router",
+  id: "opencode-subagent-router",
   tui: async (api: TuiPluginApi) => {
     api.slots.register({
       slots: {

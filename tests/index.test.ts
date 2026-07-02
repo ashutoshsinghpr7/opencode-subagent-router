@@ -1,6 +1,6 @@
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { resolveModel, getModelCost, DEFAULT_CONFIG } from "../lib/config.js"
+import { resolveModel, getModelCost, DEFAULT_CONFIG, registerProviderCosts } from "../lib/config.js"
 import { getRouteForAgent, calculateCostSaved } from "../lib/router.js"
 import { estimateTokens, formatCost, stats, resetStats } from "../lib/state.js"
 
@@ -30,6 +30,23 @@ describe("config", () => {
     assert.ok(cost)
     assert.equal(cost!.reasoning, true)
     assert.ok(cost!.cost.input > 0.14)
+  })
+
+  test("registerProviderCosts adds new provider models", () => {
+    registerProviderCosts({
+      openai: {
+        "gpt-4o-mini": {
+          cost: { input: 0.15, output: 0.60 },
+          reasoning: false,
+          context: 128000,
+        },
+      },
+    })
+    const cost = getModelCost("openai/gpt-4o-mini")
+    assert.ok(cost)
+    assert.equal(cost!.providerID, "openai")
+    assert.equal(cost!.cost.input, 0.15)
+    assert.equal(cost!.reasoning, false)
   })
 })
 

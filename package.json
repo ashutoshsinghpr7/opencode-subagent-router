@@ -1,7 +1,7 @@
 {
-  "name": "opencode-model-router",
-  "version": "1.0.0",
-  "description": "Dynamic model router for OpenCode - cost-optimized sub-agent model selection with escalation and guardrails",
+  "name": "opencode-subagent-router",
+  "version": "1.0.5",
+  "description": "Dynamic sub-agent model router for OpenCode - cost-optimized model selection with escalation and guardrails",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,19 +9,23 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./tui": {
-      "import": "./dist/tui.js",
-      "types": "./dist/tui.d.ts"
     }
   },
   "files": [
     "dist/",
     "lib/",
-    "tui.tsx",
+    "index.js",
     "README.md",
     "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashutoshsinghpr7/opencode-subagent-router"
+  },
+  "homepage": "https://github.com/ashutoshsinghpr7/opencode-subagent-router#readme",
+  "bugs": {
+    "url": "https://github.com/ashutoshsinghpr7/opencode-subagent-router/issues"
+  },
   "scripts": {
     "build": "tsup && tsc --emitDeclarationOnly --declaration",
     "dev": "tsup --watch",
@@ -32,24 +36,19 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": "*",
-    "@opentui/core": "*",
-    "@opentui/solid": "*",
-    "solid-js": "*"
+    "@opencode-ai/plugin": "*"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.17.11",
-    "@opentui/core": "^0.1.0",
-    "@opentui/solid": "^0.1.0",
     "@types/node": "^22.0.0",
     "prettier": "^3.3.0",
-    "solid-js": "^1.9.0",
     "tsup": "^8.0.0",
     "typescript": "^5.5.0"
   },
   "keywords": [
     "opencode",
     "opencode-plugin",
+    "subagent-router",
     "model-router",
     "cost-optimization",
     "sub-agent"

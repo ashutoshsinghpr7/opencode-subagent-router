@@ -21,6 +21,11 @@ export interface RoutingRule {
 export interface RouterConfig {
   rules: RoutingRule[]
   defaultModel: string
+  providers?: Record<string, Record<string, {
+    cost: { input: number; output: number; cacheRead?: number }
+    reasoning: boolean
+    context: number
+  }>>
   escalation: {
     enabled: boolean
     threshold: number
@@ -115,4 +120,24 @@ export function resolveModel(modelKey: string): {
 
 export function getModelCost(modelKey: string): ModelInfo | undefined {
   return MODEL_COST_TABLE[modelKey]
+}
+
+export function registerProviderCosts(
+  providers: NonNullable<RouterConfig["providers"]>,
+): void {
+  for (const [providerID, models] of Object.entries(providers)) {
+    for (const [modelID, info] of Object.entries(models)) {
+      const key = `${providerID}/${modelID}`
+      if (!MODEL_COST_TABLE[key]) {
+        MODEL_COST_TABLE[key] = {
+          id: modelID,
+          providerID,
+          cost: info.cost,
+          reasoning: info.reasoning,
+          context: info.context,
+          status: "active",
+        }
+      }
+    }
+  }
 }

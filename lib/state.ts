@@ -28,7 +28,7 @@ export const stats: RoutingStats = {
 }
 
 export function resetStats(): void {
-  stats.decisions.length = 0
+  stats.decisions = []
   stats.totalTokensRouted = 0
   stats.totalCostSaved = 0
   stats.sessionCostSaved = 0

@@ -1,35 +1,34 @@
-# opencode-model-router
+# opencode-subagent-router
 
-Dynamic model router for [OpenCode](https://opencode.ai) — cost-optimized sub-agent model selection with escalation and quality guardrails.
+Dynamic sub-agent model router for [OpenCode](https://opencode.ai) — cost-optimized model selection with escalation and quality guardrails.
+
+## Provider Support
+
+| Provider | Cost tracking | Default rules | Notes |
+|---|---|---|---|
+| **DeepSeek** | Built-in | Built-in | Full support |
+| OpenAI | Config-based | Manual | Add via `providers` config |
+| Anthropic | Config-based | Manual | Add via `providers` config |
+| Google | Config-based | Manual | Add via `providers` config |
+| Others | Config-based | Manual | Add via `providers` config |
+
+> **Roadmap**: [#1](https://github.com/ashutoshsinghpr7/opencode-subagent-router/issues/1) Add built-in cost data + default rules for OpenAI, Anthropic, Google. PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Features
 
 - **Dynamic routing**: `chat.message` hook intercepts sub-agent invocations and overrides the model based on task type
-- **Cost-optimized**: Routes cheap tasks (explore, title, summary, compaction) to `deepseek-v4-flash` ($0.42/M tokens) and complex tasks (general, build, plan) to `deepseek-v4-pro` ($1.30/M tokens)
-- **Smart escalation**: If a cheap model receives a complex task (> threshold output), auto-promotes to the powerful model
-- **Quality guardrails**: If a cheap model produces inadequate output, auto-reverts to the powerful model and tracks the pattern
+- **Cost-optimized**: Routes cheap tasks (explore, title, summary, compaction) to cheap models and complex tasks (general, build, plan) to powerful models
+- **Provider-agnostic**: Works with any provider supporting multiple models via single API key. Built-in rules for DeepSeek; config-based rules for everything else.
+- **Smart escalation**: If a cheap model receives a complex task, auto-promotes to the powerful model with cooldown
+- **Quality guardrails**: Tracks when cheap models get re-tasked (signal of inadequate output) and auto-reverts to flagship
 - **Session summaries**: Reports cost saved at session end via toast
 - **TUI sidebar**: Live cost savings visible in the right-side panel
 - **`/route-stats` command**: Show routing stats on demand
 
-## Cost Savings
-
-| Sub-Agent | Default Model (native config) | Plugin Override | Cost/M tokens |
-|---|---|---|---|
-| explore | deepseek-v4-flash ($0.42) | Same (pass-through) | $0.42 |
-| title | deepseek-chat ($0.42) | deepseek-v4-flash ($0.42) | Same cost |
-| summary | deepseek-chat ($0.42) | deepseek-v4-flash ($0.42) | Same cost |
-| compaction | deepseek-chat ($0.42) | deepseek-v4-flash ($0.42) | Same cost |
-| general | deepseek-v4-pro ($1.30) | deepseek-v4-pro ($1.30) | Same (quality critical) |
-| build | deepseek-v4-pro ($1.30) | deepseek-v4-pro ($1.30) | Same (quality critical) |
-| plan | deepseek-v4-pro ($1.30) | deepseek-v4-pro ($1.30) | Same (quality critical) |
-
-The plugin's primary value over native config is **dynamic escalation** — if an explore agent gets a task too complex for flash, it auto-promotes to pro, then reverts when done. This prevents the "cheap model → bad output → more expensive rework" loop.
-
 ## Install
 
 ```bash
-npm install opencode-model-router
+npm install opencode-subagent-router
 ```
 
 ### Configure
@@ -37,14 +36,14 @@ npm install opencode-model-router
 In `.opencode/opencode.json`:
 ```json
 {
-  "plugin": ["opencode-model-router"]
+  "plugin": ["opencode-subagent-router"]
 }
 ```
 
 In `.opencode/tui.json`:
 ```json
 {
-  "plugin": ["opencode-model-router"]
+  "plugin": ["opencode-subagent-router"]
 }
 ```
 
@@ -79,8 +78,47 @@ Add a `model-router` section to `opencode.json`:
       "enabled": true,
       "maxRetries": 2,
       "retryWindowMs": 600000
-    },
-    "costDisplay": "both"
+    }
+  }
+}
+```
+
+### Adding a new provider
+
+Add model costs via the `providers` field. The router uses this data to calculate per-session savings:
+
+```json
+{
+  "model-router": {
+    "rules": [
+      {
+        "agents": ["explore", "title", "summary", "compaction"],
+        "model": "gpt-4o-mini",
+        "provider": "openai",
+        "label": "Cheap for simple tasks"
+      },
+      {
+        "agents": ["general", "build", "plan"],
+        "model": "gpt-4o",
+        "provider": "openai",
+        "label": "Powerful for code"
+      }
+    ],
+    "defaultModel": "gpt-4o-mini",
+    "providers": {
+      "openai": {
+        "gpt-4o-mini": {
+          "cost": { "input": 0.15, "output": 0.60 },
+          "reasoning": false,
+          "context": 128000
+        },
+        "gpt-4o": {
+          "cost": { "input": 2.50, "output": 10.00 },
+          "reasoning": true,
+          "context": 128000
+        }
+      }
+    }
   }
 }
 ```

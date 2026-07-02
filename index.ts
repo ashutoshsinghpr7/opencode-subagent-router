@@ -1,24 +1,25 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { DEFAULT_CONFIG, resolveModel, getModelCost } from "./lib/config.js"
+import {
+  DEFAULT_CONFIG,
+  getModelCost,
+  registerProviderCosts,
+  type RouterConfig,
+} from "./lib/config.js"
 import { stats, resetStats, estimateTokens, formatCost } from "./lib/state.js"
 import { getRouteForAgent } from "./lib/router.js"
 
-const plugin: Plugin = async ({ client, directory }) => {
-  await client.app.log({
-    body: {
-      service: "opencode-model-router",
-      level: "info",
-      message: `Model Router loaded — cost-optimized dynamic routing active in ${directory}`,
-    },
-  })
+let activeConfig: RouterConfig = DEFAULT_CONFIG
 
-  await client.app.log({
-    body: {
-      service: "opencode-model-router",
-      level: "info",
-      message: `Rules: explore/title/summary/compaction → v4-flash | general/build/plan → v4-pro`,
-    },
-  })
+export const SubagentRouter: Plugin = async ({ client, directory }) => {
+  try {
+    await client.app.log({
+      body: {
+        service: "opencode-subagent-router",
+        level: "info",
+        message: `Subagent Router loaded — cost-optimized routing active in ${directory}`,
+      },
+    })
+  } catch {}
 
   return {
     "chat.message": async (input, output) => {
@@ -35,7 +36,7 @@ const plugin: Plugin = async ({ client, directory }) => {
           model?: { providerID: string; modelID: string }
         }
         const subtaskAgent = subtaskPart.agent || agent
-        const route = getRouteForAgent(subtaskAgent)
+        const route = getRouteForAgent(subtaskAgent, activeConfig)
 
         const effectiveProvider =
           subtaskPart.model?.providerID || input.model?.providerID || "deepseek"
@@ -60,13 +61,15 @@ const plugin: Plugin = async ({ client, directory }) => {
           const originalPrice = originalInfo.cost.input + originalInfo.cost.output
           const routedPrice = routedInfo.cost.input + routedInfo.cost.output
           if (originalPrice > routedPrice) {
-            await client.app.log({
-              body: {
-                service: "opencode-model-router",
-                level: "info",
-                message: `${subtaskAgent}: ${originalKey} → ${routedKey} (save ${formatCost(originalPrice - routedPrice)}/1M tokens)`,
-              },
-            })
+            try {
+              await client.app.log({
+                body: {
+                  service: "opencode-subagent-router",
+                  level: "info",
+                  message: `${subtaskAgent}: ${originalKey} → ${routedKey} (save ${formatCost(originalPrice - routedPrice)}/1M tokens)`,
+                },
+              })
+            } catch {}
           }
         }
 
@@ -108,13 +111,15 @@ const plugin: Plugin = async ({ client, directory }) => {
           .map(([agent, count]) => `${agent}: ${count}`)
           .join(", ")
 
-        await client.tui.showToast({
-          body: {
-            message: `Model Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
-            variant: "info",
-            duration: 8000,
-          },
-        })
+        try {
+          await client.tui.showToast({
+            body: {
+              message: `Subagent Router: ${stats.decisions.length} decisions saved ${formatCost(sessionSaved)} | ${agentSummary}`,
+              variant: "info",
+              duration: 8000,
+            },
+          })
+        } catch {}
       }
       resetStats()
     },
@@ -123,8 +128,9 @@ const plugin: Plugin = async ({ client, directory }) => {
       const cmd = input as { command: string }
       if (cmd.command === "/route-stats") {
         const totalSaved = stats.decisions.reduce((sum, d) => sum + d.costSaved, 0)
-        const rulings = stats.decisions
-          .map((d) => `  ${d.agent}: ${d.originalModel} → ${d.routedModel} (${d.reason})`)
+        const rulings = stats.decisions.map(
+          (d) => `  ${d.agent}: ${d.originalModel} → ${d.routedModel} (${d.reason})`,
+        )
 
         const lines = [
           `Decisions: ${stats.decisions.length}`,
@@ -138,16 +144,18 @@ const plugin: Plugin = async ({ client, directory }) => {
           ...rulings.slice(-10),
         ]
 
-        await client.tui.showToast({
-          body: {
-            message: lines.join("\n"),
-            variant: "info",
-            duration: 10000,
-          },
-        })
+        try {
+          await client.tui.showToast({
+            body: {
+              message: lines.join("\n"),
+              variant: "info",
+              duration: 10000,
+            },
+          })
+        } catch {}
       }
     },
   }
 }
 
-export default plugin
+export default SubagentRouter

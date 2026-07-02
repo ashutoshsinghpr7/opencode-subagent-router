@@ -9,11 +9,16 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./tui": {
+      "import": "./dist/tui.js",
+      "types": "./dist/tui.d.ts"
     }
   },
   "files": [
     "dist/",
     "lib/",
+    "tui.tsx",
     "index.js",
     "README.md",
     "LICENSE"
@@ -36,10 +41,16 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": "*"
+    "@opencode-ai/plugin": "*",
+    "@opentui/core": "*",
+    "@opentui/solid": "*",
+    "solid-js": "*"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.17.11",
+    "@opentui/core": "^0.1.0",
+    "@opentui/solid": "^0.1.0",
+    "solid-js": "^1.9.0",
     "@types/node": "^22.0.0",
     "prettier": "^3.3.0",
     "tsup": "^8.0.0",

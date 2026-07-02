@@ -5,7 +5,7 @@ import {
   registerProviderCosts,
   type RouterConfig,
 } from "./lib/config.js"
-import { stats, resetStats, estimateTokens, formatCost } from "./lib/state.js"
+import { stats, resetStats, estimateTokens, formatCost, persistStats } from "./lib/state.js"
 import { getRouteForAgent } from "./lib/router.js"
 
 let activeConfig: RouterConfig = DEFAULT_CONFIG
@@ -29,6 +29,8 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
 
       for (const part of output.parts) {
         if (part.type !== "subtask") continue
+
+        stats.checks++
 
         const subtaskPart = part as {
           type: "subtask"
@@ -81,6 +83,7 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
           costSaved: 0,
           reason: route.reason,
         })
+        persistStats()
       }
     },
 
@@ -96,6 +99,8 @@ export const SubagentRouter: Plugin = async ({ client, directory }) => {
         typeof resultOutput === "string" ? resultOutput : JSON.stringify(resultOutput || "")
       const tokens = estimateTokens(outputText)
       stats.totalTokensRouted += tokens
+      stats.checks++
+      persistStats()
     },
 
     "session.idle": async () => {

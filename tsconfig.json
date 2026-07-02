@@ -17,6 +17,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["index.ts", "lib/**/*.ts"],
+  "include": ["index.ts", "tui.tsx", "lib/**/*.ts", "lib/**/*.tsx"],
   "exclude": ["node_modules", "dist", "tests"]
 }

@@ -19,9 +19,18 @@
     "dist/",
     "lib/",
     "tui.tsx",
+    "index.js",
     "README.md",
     "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashutoshsinghpr7/opencode-subagent-router"
+  },
+  "homepage": "https://github.com/ashutoshsinghpr7/opencode-subagent-router#readme",
+  "bugs": {
+    "url": "https://github.com/ashutoshsinghpr7/opencode-subagent-router/issues"
+  },
   "scripts": {
     "build": "tsup && tsc --emitDeclarationOnly --declaration",
     "dev": "tsup --watch",

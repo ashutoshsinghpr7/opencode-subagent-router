@@ -46,6 +46,7 @@ export function RouterPanel() {
       paddingY={0}
       width="100%"
     >
+      <box title="Subagent Router">{c > 0 && `▶ Subagent Router (${c} checks${d > 0 ? ` · ${formatCost(sessionCostSaved())}` : ""})`}</box>
       {c === 0 ? (
         <text attributes={TextAttributes.DIM}>No routing yet</text>
       ) : (
